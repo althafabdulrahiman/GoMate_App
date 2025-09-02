@@ -11,6 +11,7 @@ import Orders from "./orders/Orders";
 import AddOrder from "./orders/AddOrder";
 import UpdateOrder from "./orders/UpdateOrder";
 import Login from "./Login";
+import Footer from "./Footer";
 // import Dashboard from "./Dashboard";
 
 const Router = () => {
@@ -32,6 +33,7 @@ const Router = () => {
           <Route path="/addOrder" element={<AddOrder />} />
           <Route path="/updateOrder" element={<UpdateOrder />} />
         </Routes>
+        <Footer />
       </BrowserRouter>
     </div>
   );

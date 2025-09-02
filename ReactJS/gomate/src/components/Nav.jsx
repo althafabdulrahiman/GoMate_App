@@ -6,12 +6,31 @@ import { LoginContext } from "../context/UserContext";
 const Header = () => {
   const { setLoadData, setToken, setIsAdmin } = useContext(LoginContext);
 
+
   const handleLogout = (e) => {
-    e.preventDefault();
-    setIsAdmin(false);
-    setLoadData(false);
-    setToken(" ");
-  };
+  e.preventDefault();
+
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, "0");
+  const dd = String(today.getDate()).padStart(2, "0");
+
+  const todayStr = `${yyyy}-${mm}-${dd}`; // "YYYY-MM-DD" format
+
+  localStorage.setItem(
+    "dateRange",
+    JSON.stringify({
+      startDate: todayStr,
+      endDate: todayStr,
+    })
+  );
+
+  setIsAdmin(false);
+  setLoadData(false);
+  setToken(" ");
+};
+
+
   return (
     // <div
     //   className="d-flex flex-column p-3  text-white vh-100"
@@ -72,7 +91,7 @@ const Header = () => {
             <li className="nav-item">
               <Link
                 className="nav-link fw-bold"
-                style={{ color: "#FFD700" }}
+                style={{ color: "#FFD700"}}
                 to="/"
               >
                 Home
@@ -108,11 +127,11 @@ const Header = () => {
             <li className="nav-item">
               <Link
                 className="nav-link  "
-                style={{ color: "#000000ff" }}
+                style={{ color: "#000000ff" ,marginRight:"-65px"}}
                 to="/login"
                 onClick={handleLogout}
               >
-                Logout
+               <button style={{backgroundColor:"#052eb6ff",border:"none",borderRadius:"4px",padding:"5px",color:"white"}}>Logout</button> 
               </Link>
             </li>
           </ul>

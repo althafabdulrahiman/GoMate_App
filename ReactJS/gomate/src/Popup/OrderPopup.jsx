@@ -92,7 +92,7 @@ const OrderPopup = ({ orderId, setIsPopup, token }) => {
         headers: { Authorization: `Bearer ${token}` },
       });
       const dt = await res.json();
-      console.log("popup data:", dt.data);
+      console.log("popup order data:", dt.data);
       setOrder(dt.data);
     };
 
@@ -149,7 +149,7 @@ const OrderPopup = ({ orderId, setIsPopup, token }) => {
         <h2 style={{ marginBottom: "15px", color: "#333" }}>Order Details</h2>
 
         {/* Order Info */}
-        <div style={{ textAlign: "left", fontSize: "14px", lineHeight: "1.6" }}>
+        <div style={{ textAlign: "left", fontSize: "14px", lineHeight: "1.6" , color:"black"}}>
           <p>
             <strong>Start Location:</strong> {order.StartLocation}
           </p>

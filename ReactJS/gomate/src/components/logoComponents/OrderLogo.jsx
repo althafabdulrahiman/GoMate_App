@@ -3,13 +3,14 @@ import { LoginContext } from "../../context/UserContext";
 import OrderLogoData from "./OrderLogoData";
 
 const OrderLogo = ({
-  orders,
+  sortedOrders,
   setOrders,
   drivers,
   setDrivers,
   vehicles,
   setVehicles,
 }) => {
+  
   return (
     <div
       style={{
@@ -18,12 +19,12 @@ const OrderLogo = ({
         gap: "25px",
         margin: "30px",
         alignItems: "flex-start",
-        maxHeight: "500px", // limit the height of the container
+        maxHeight: "530px", // limit the height of the container
         overflowY: "auto", // enable vertical scroll
         paddingRight: "10px", // keeps them aligned from top
       }}
     >
-      {orders.map(
+      {sortedOrders.map(
         (order) =>
           order.Status === "Active" && (
             <OrderLogoData

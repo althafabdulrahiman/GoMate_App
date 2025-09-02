@@ -133,13 +133,55 @@
 import DriverLogo from "./logoComponents/DriverLogo";
 import OrderLogo from "./logoComponents/OrderLogo";
 import VehicleLogo from "./logoComponents/VehicleLogo";
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext,useRef } from "react";
 import { LoginContext } from "../context/UserContext";
+
+
+import { DateRange } from "react-date-range";
+import "react-date-range/dist/styles.css"; // main css
+import "react-date-range/dist/theme/default.css";
 
 const Home = () => {
   const [drivers, setDrivers] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [allOrders,setAllOrders]=useState([])
+
+const [dateRange, setDateRange] = useState(() => {
+  const saved = localStorage.getItem("dateRange");
+  if (saved) {
+    const parsed = JSON.parse(saved);
+    return [
+      {
+        startDate: new Date(parsed.startDate),
+        endDate: new Date(parsed.endDate),
+        key: "selection",
+      },
+    ];
+  }
+  return [
+    {
+      startDate: new Date(),
+      endDate: new Date(),
+      key: "selection",
+    },
+  ];
+});
+
+useEffect(() => {
+  localStorage.setItem(
+    "dateRange",
+    JSON.stringify({
+      startDate: dateRange[0].startDate,
+      endDate: dateRange[0].endDate,
+    })
+  );
+}, [dateRange]);
+
+  
+  const [showPicker, setShowPicker] = useState(false);
+
+  const pickerRef=useRef(null)
 
   const { token } = useContext(LoginContext);
 
@@ -155,14 +197,30 @@ const Home = () => {
     };
 
     const fetchOrderData = async () => {
+const startDate = dateRange[0].startDate.toISOString();
+const endDate = dateRange[0].endDate.toISOString();
+
+      const url = `http://localhost:3001/orders/get?StartDate=${startDate}&EndDate=${endDate}`;
+      const res = await fetch(url, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const dt = await res.json();
+      console.log("althaf orders:",dt.data)
+      setOrders(dt.data);
+    };
+
+    const fetchAllOrders = async () => {
       const url = `http://localhost:3001/orders/get`;
       const res = await fetch(url, {
         method: "GET",
         headers: { Authorization: `Bearer ${token}` },
       });
       const dt = await res.json();
-      setOrders(dt.data);
+      setAllOrders(dt.data);
     };
+  
+
 
     const fetchVehicleData = async () => {
       const url = `http://localhost:3001/vehicles/getAvailable`;
@@ -177,7 +235,26 @@ const Home = () => {
     fetchDriverData();
     fetchOrderData();
     fetchVehicleData();
-  }, [token]);
+    fetchAllOrders();
+  }, [token,dateRange]);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (pickerRef.current && !pickerRef.current.contains(e.target)) {
+        setShowPicker(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const sortedOrders=[...orders].sort((a,b)=>
+  {const aHasAssigned=a.Driver && a.Vehicle;
+    const bHasAssigned=b.Driver && b.Vehicle;
+    if(!aHasAssigned && bHasAssigned) return -1;
+    if(aHasAssigned && !bHasAssigned) return 1;
+    return 0;
+  })
 
   return (
     <div>
@@ -195,12 +272,58 @@ const Home = () => {
           right: 0,
         }}
       ></div>
+ <div
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          margin: "20px 30px 0 0",
+          gap: "15px",
+          position: "relative",
+        }}
+      >
+        <button
+          onClick={() => setShowPicker(!showPicker)}
+          style={{
+            padding: "10px 15px",
+            borderRadius: "8px",
+            border: "3px solid gray",
+            background: "#faf5dcff",
+            cursor: "pointer",
+            fontWeight: "bold",
+          }}
+        >
+          {`From : ${dateRange[0].startDate.toLocaleDateString("en-GB")}   To: ${dateRange[0].endDate.toLocaleDateString("en-GB")}`}
 
-      {/* Main layout: Left (Drivers + Vehicles) | Right (Orders) */}
+        </button>
+
+        {showPicker && (
+          <div
+            ref={pickerRef}
+            style={{
+              position: "absolute",
+              top: "50px",
+              right: "0",
+              zIndex: 10,
+              background: "#fff",
+              borderRadius: "10px",
+              boxShadow: "0 4px 8px rgba(0,0,0,0.3)",
+            }}
+          >
+            <DateRange
+              editableDateInputs={true}
+              onChange={(item) => setDateRange([item.selection])}
+              moveRangeOnFirstSelection={false}
+              ranges={dateRange}
+            />
+          </div>
+        )}
+      </div>
+
+      
       <div
         style={{
           display: "flex",
-          marginTop: "30px",
+          marginTop: "5px",
           padding: "20px",
           gap: "20px",
           alignItems: "flex-start",
@@ -268,9 +391,17 @@ const Home = () => {
             border: "4px solid gray",
           }}
         >
-          {/* <h6 style={{ textAlign: "center", marginBottom: "10px" }}>Orders</h6> */}
+          {/* <h6 style={{ textAlign: "center", marginBottom: "0px" }}>Orders</h6> */}
+          {orders.length !== 0 ? (
+            <h6 style={{ textAlign: "center", marginBottom: "0px" }}>
+              Orders</h6>
+          ) : (
+            <h6 style={{ textAlign: "center", marginBottom: "0px", color: "red" }}>
+              No orders available for the selected date range
+            </h6>
+          )}
           <OrderLogo
-            orders={orders}
+            sortedOrders={sortedOrders}
             setOrders={setOrders}
             drivers={drivers}
             setDrivers={setDrivers}

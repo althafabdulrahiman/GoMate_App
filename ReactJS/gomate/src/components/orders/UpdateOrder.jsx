@@ -52,12 +52,13 @@ const UpdateOrder = () => {
     if (orderData.DropLocation) {
       setDropLocation(orderData.DropLocation);
     }
-    if (orderData.StartDate) {
-      setStartDate(orderData.StartDate);
-    }
-    if (orderData.EndDate) {
-      setEndDate(orderData.EndDate);
-    }
+   if (orderData.StartDate) {
+  setStartDate(new Date(orderData.StartDate).toISOString().split("T")[0]);
+}
+if (orderData.EndDate) {
+  setEndDate(new Date(orderData.EndDate).toISOString().split("T")[0]);
+}
+
     if (orderData.ServiceType) {
       setServiceType(orderData.ServiceType);
     }
@@ -148,7 +149,7 @@ const UpdateOrder = () => {
           value={endDate ?? ""}
           onChange={(e) => setEndDate(e.target.value)}
           placeholder="End Date"
-          min={startDate || minDate}
+          min={startDate ? new Date(startDate).toISOString().split("T")[0] : minDate}
         />
 
         {/* <input

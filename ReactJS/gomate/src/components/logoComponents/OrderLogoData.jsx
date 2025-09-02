@@ -279,6 +279,8 @@ const OrderLogoData = ({
   // const [checkOrder, setCheckOrder] = UseOrderHook(token, order._id);
   const [checkOrder, setCheckOrder] = useState(null);
 
+  const isPastOrder =updatedOrder && new Date(updatedOrder.EndDate).setHours(0, 0, 0, 0) < new Date().setHours(0, 0, 0, 0);
+
   const [isPopup, setIsPopup] = useState(false);
 
   useEffect(() => {
@@ -317,6 +319,10 @@ const OrderLogoData = ({
   const handleDrop = async (e) => {
     e.preventDefault();
 
+     if (isPastOrder) {
+    alert("Cannot assign drivers/vehicles to past orders");
+    return;
+  }
     // setDriverStatus("Inactive");
 
     const droppedDriverId = e.dataTransfer.getData("driverId");
@@ -512,6 +518,57 @@ const OrderLogoData = ({
 
   const totalCost = (driverCost ?? 0) + (vehicleCost ?? 0);
 
+  useEffect(() => {
+  if (!updatedOrder) return;
+
+  // If order is expired and has driver/vehicle assigned
+  const needsUnassign =
+    isPastOrder && (updatedOrder.Driver?._id || updatedOrder.Vehicle?._id);
+
+  if (!needsUnassign) return;
+
+  const unassignExpiredOrder = async () => {
+    let payload = {};
+    if (updatedOrder.Driver?._id) payload.driverId = null;
+    if (updatedOrder.Vehicle?._id) payload.vehicleId = null;
+
+    try {
+      await fetch(`http://localhost:3001/orders/updateOrder?id=${order._id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      // Restore driver/vehicle to lists if needed
+      if (updatedOrder.Driver?._id) setDrivers((prev) => [...prev, updatedOrder.Driver]);
+      if (updatedOrder.Vehicle?._id)
+        setVehicles((prev) => [...prev, updatedOrder.Vehicle]);
+
+      // Refresh order
+      const refreshedRes = await fetch(
+        `http://localhost:3001/orders/getUpdatedOrder?id=${order._id}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const refreshedData = await refreshedRes.json();
+      setUpdatedOrder(refreshedData.data[0]);
+    } catch (err) {
+      console.error("Automatic unassign failed:", err.message);
+    }
+  };
+
+  unassignExpiredOrder();
+}, [updatedOrder, order._id, token]);
+
+
   return (
     // <div
     //   onDragOver={(e) => e.preventDefault()}
@@ -600,7 +657,9 @@ const OrderLogoData = ({
       onDragOver={(e) => e.preventDefault()}
       onDrop={handleDrop}
       style={{
-        backgroundColor: "#FFD700",
+        // backgroundColor: "#FFD700",
+        backgroundColor:updatedOrder?.Driver?.Name && updatedOrder?.Vehicle?.Name ? "green" : "Red",
+        color:"white",
         padding: "12px",
         width: "250px",
         height: "250px", // fixed height
@@ -623,7 +682,7 @@ const OrderLogoData = ({
       >
         <h6 className="fw-bold mb-0">{order.StartLocation}</h6>
 
-        <h6 className="text-muted mb-0">To</h6>
+        <h6 className="mb-0" style={{fontWeight:"bold",color:"#ffd700"}}>To</h6>
 
         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
           <h6 className="fw-bold mb-0">{order.DropLocation}</h6>
@@ -653,16 +712,16 @@ const OrderLogoData = ({
         }}
       />
 
-      <h6 className="mb-2" style={{ fontSize: "0.85rem" }}>
+      <h6 className="mb-2" style={{ fontSize: "0.85rem" ,}}>
         Driver:{" "}
         {updatedOrder?.Driver?.Name || (
-          <span style={{ color: "gray" }}>No driver assigned</span>
+          <span style={{ color: "#ffd700" }}>No driver assigned</span>
         )}{" "}
         {updatedOrder?.Driver && (
           <button
             onClick={unassignDriver}
             className="btn btn-outline-danger btn-sm"
-            style={{ padding: "2px 5px" }}
+            style={{ padding: "2px 5px" ,backgroundColor:"#ffd700",color:"black"}}
           >
             <Trash size={14} />
           </button>
@@ -672,13 +731,13 @@ const OrderLogoData = ({
       <h6 className="mb-2" style={{ fontSize: "0.85rem" }}>
         Vehicle:{" "}
         {updatedOrder?.Vehicle?.Name || (
-          <span style={{ color: "gray" }}>No vehicle assigned</span>
+          <span style={{ color: "#ffd700" }}>No vehicle assigned</span>
         )}{" "}
         {updatedOrder?.Vehicle && (
           <button
             onClick={unassignVehicle}
             className="btn btn-outline-danger btn-sm"
-            style={{ padding: "2px 5px" }}
+            style={{ padding: "2px 5px",backgroundColor:"#ffd700",color:"black" }}
           >
             <Trash size={14} />
           </button>
@@ -699,7 +758,7 @@ const OrderLogoData = ({
         </span>
         <br /> */}
         Total Cost:{" "}
-        <span style={{ color: "green", fontWeight: "600" }}>{totalCost}</span>
+        <span style={{ color: "#ffd700", fontWeight: "600" }}>{totalCost}</span>
       </div>
 
       {isPopup && (
