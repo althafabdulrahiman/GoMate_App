@@ -41,7 +41,7 @@ router.post("/add", authMiddleware, async (req, res, next) => {
     res.status(400).json({
       status: 400,
       message: "Data not inserted",
-    });
+    },EndDate);
   }
 });
 
@@ -49,12 +49,18 @@ router.get("/get", authMiddleware, async (req, res, next) => {
   try {
     const { id } = req.query;
     let newData;
+    const {StartDate,EndDate}=req.query;
 
     if (id) {
       newData = await orderController.getOrderById(id);
-    } else {
+    } 
+    else if(StartDate || EndDate){
+        newData=await orderController.getOrderByDate(StartDate,EndDate);
+      }
+      else
+      {
       newData = await orderController.getOrder();
-    }
+      }
 
     res.status(200).json({
       status: 200,
@@ -168,5 +174,14 @@ router.delete("/delete", authMiddleware, async (req, res, next) => {
     });
   }
 });
+
+// router.get("/getByDate",authMiddleware,(req,res,next)=>{
+//   try{
+//     const {}=req.body
+//   }catch(error)
+//   {
+//     res.status(400).json({message:"error occured"})
+//   }
+// })
 
 module.exports = router;

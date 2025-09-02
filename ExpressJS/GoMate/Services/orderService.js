@@ -39,6 +39,16 @@ const getOrderById = async (id) => {
   return data;
 };
 
+const getOrderByDate =async(StartDate,EndDate)=>{
+  const start=new Date(StartDate)
+  const end=new Date(EndDate)
+
+  end.setHours(23, 59, 59, 999);
+
+  const data=await orderModel.aggregate([{$match:{StartDate:{$gte:start},EndDate:{$lte:end}}}])
+  return data
+}
+
 // const getOrderFull = async () => {
 //   const data = await orderModel.find().populate("Vehicle").populate("Driver");
 //   return data;
@@ -130,4 +140,5 @@ module.exports = {
   // getOrderByOrderId,
   // getOrderFull,
   getUpdatedOrder,
+  getOrderByDate,
 };

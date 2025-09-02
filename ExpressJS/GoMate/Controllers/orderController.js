@@ -34,6 +34,10 @@ const getOrder = async () => {
 //   return await orderService.getOrderFull();
 // };
 
+const getOrderByDate=async(StartDate,EndDate)=>{
+  return await orderService.getOrderByDate(StartDate,EndDate);
+}
+
 const getOrderById = async (id) => {
   return await orderService.getOrderById(id);
 };
@@ -83,4 +87,5 @@ module.exports = {
   // getOrderByOrderId,
   // getOrderFull,
   getUpdatedOrder,
+  getOrderByDate,
 };
